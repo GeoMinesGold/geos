@@ -1,0 +1,67 @@
+#!/usr/bin/env bash
+
+source /usr/lib/geos/core.sh
+
+imp rand arr notifs args file
+
+pass_dir="${LOCAL_DIR}/passwords"
+auth_dir="${LOCAL_DIR}/auth"
+mkdir -p "${pass_dir}"
+
+save_pass() { 
+	local accounts=("${@}")
+	local account password
+
+	if [[ -z "${accounts[@]}" ]]; then
+		echo "Account can't be empty"
+		return 1
+	fi
+
+	for account in "${accounts[@]}"; do
+		password="$(gen_pw)"
+		echo "${password}" > "${pass_dir}/${account}.pass"
+	done
+}
+
+
+get_pass() {
+	local accounts=("${@}")
+	local account
+
+	if [[ -z "${accounts[@]}" ]]; then
+		echo "Account can't be empty"
+		return 1
+	fi
+
+	for account in "${accounts[@]}"; do
+		local password="$(cat "${pass_dir}/${account}.pass")"
+		echo "${password}"
+	done
+}
+
+rm_pass() {
+	local accounts=("${@}")
+	local account
+
+	if [[ -z "${accounts[@]}" ]]; then
+		echo "Account can't be empty"
+		return 1
+	fi
+
+	for account in "${accounts[@]}"; do
+		rm "${pass_dir}/${account}.pass"
+	done
+}
+
+while true; do
+	read -ra input
+	case "${input[0]}" in
+		'e' | 'exit') break ;;
+		'g' | 'gen') gen_pw "${input[@]:1}" ;;
+		's' | 'save') save_pass "${input[@]:1}" ;;
+		'q' | 'query' | 'get') get_pass "${input[@]:1}" ;;
+		'r' | 'rm') rm_pass "${input[@]:1}" ;;
+        '') true ;;
+		*) echo "Unknown command: ${input[0]}" ;;
+	esac
+done

@@ -1,0 +1,117 @@
+#!/usr/bin/env python
+
+import os
+import re
+import argparse
+from concurrent.futures import ThreadPoolExecutor, as_completed
+
+# Define patterns to search for
+totp_pattern = re.compile(r'otpauth://\S+')
+recovery_code_pattern = re.compile(r'[A-Z0-9]{5}(?:-[A-Z0-9]{5}){4}')
+password_pattern = re.compile(r'(?=(.*[!@#$%^&*()?\-_=+{}[\]|\\;:"\'<>,./]).*){3,}[^ \n\t\r\f\v\W]{32,}')
+
+# Extended list of file extensions to exclude
+excluded_extensions = [
+    # Code files
+    '.py', '.js', '.cpp', '.java', '.c', '.h', '.html', '.css', '.ts', '.php', '.rb', '.sh', '.xml', '.pl', '.go', '.rs', '.cs', '.json', '.yml', '.yaml', '.ini', '.cfg',
+    
+    # Images and videos
+    '.png', '.jpg', '.jpeg', '.gif', '.bmp', '.tiff', '.svg', '.ico',  # Image formats
+    '.mp4', '.avi', '.mkv', '.mov', '.flv', '.wmv', '.webm',  # Video formats
+    '.mp3', '.wav', '.aac', '.flac', '.ogg', '.m4a',  # Audio formats
+    
+    # Compressed files
+    '.zip', '.rar', '.gz', '.tar', '.7z', '.bz2', '.xz', '.iso',
+
+    # Binary/Executable files
+    '.exe', '.bin', '.dll', '.so', '.dmg', '.msi', '.bat', '.com', '.apk', '.deb', '.rpm', '.pkg',
+
+    # Backup and system files
+    '.bak', '.log', '.tmp', '.swp', '.old', '.bk', '.cache', '.db', '.sqlite', '.lock', '.sav', '.save',
+
+    # Office and other formats
+    '.doc', '.docx', '.ppt', '.pptx', '.xls', '.xlsx', '.odt', '.odp', '.ods', '.pdf', '.rtf', '.pub', '.md',
+
+    # Other formats
+    '.xml', '.xhtml', '.rss', '.atom', '.conf', '.lst', '.crt', '.pem', '.cer', '.csr', '.p12', '.pfx'
+]
+
+# Function to determine if a file should be skipped
+def should_skip_file(filename):
+    return any(filename.lower().endswith(ext) for ext in excluded_extensions)
+
+# Function to process a single file
+def process_file(file_path):
+    results = []
+    try:
+        with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+            for line_num, line in enumerate(f, start=1):
+                # Check for TOTP URL
+                match = totp_pattern.search(line)
+                if match:
+                    results.append((file_path, line_num, 'TOTP Auth URL', match.group(0)))
+
+                # Check for Recovery Codes
+                match = recovery_code_pattern.search(line)
+                if match:
+                    results.append((file_path, line_num, 'Recovery Code', match.group(0)))
+
+                # Check for Passwords (long random strings, at least 32 characters)
+                match = password_pattern.search(line)
+                if match:
+                    results.append((file_path, line_num, 'Password', match.group(0)))
+
+    except Exception as e:
+        # Print error if file can't be read, but continue
+        print(f"Error reading file {file_path}: {e}")
+    return results
+
+# Function to scan files in a directory recursively and in parallel
+def scan_directory_for_recovery_info(directory):
+    results = []
+
+    with ThreadPoolExecutor() as executor:
+        futures = []
+
+        # Recursively walk through the directory and its subdirectories
+        for root, dirs, files in os.walk(directory):
+            for file in files:
+                file_path = os.path.join(root, file)
+
+                # Skip code files, image files, and video files
+                if not should_skip_file(file_path):
+                    # Submit file for processing in parallel
+                    futures.append(executor.submit(process_file, file_path))
+
+        # Collect results as they are completed
+        for future in as_completed(futures):
+            result = future.result()
+            if result:
+                results.extend(result)
+
+    return results
+
+# Main function to run the script with multiple directories
+if __name__ == "__main__":
+    # Argument parser to accept multiple directories as input
+    parser = argparse.ArgumentParser(description="Scan directories for recovery codes, TOTP URLs, and passwords.")
+    parser.add_argument('directories', metavar='DIR', type=str, nargs='+', 
+                        help="One or more directories to scan")
+    args = parser.parse_args()
+
+    # Scan each directory provided
+    for directory in args.directories:
+        if not os.path.isdir(directory):
+            print(f"{directory} is not a valid directory. Skipping.")
+            continue
+
+        print(f"\nScanning directory: {directory} 🔥")
+        results = scan_directory_for_recovery_info(directory)
+
+        # Print results
+        if results:
+            print("\nFound the following items:")
+            for file_path, line_num, item_type, pattern in results:
+                print(f"{item_type} found in {file_path} on line {line_num}: {pattern}")
+        else:
+            print(f"No recovery codes, TOTP URLs, or passwords found in {directory}.")

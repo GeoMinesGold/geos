@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+# A collection of miscellaneous useful bash utilities
+# Requires main_utils, filename_utils, rand_utils, screen_utils and date_utils 
+# Recommended: Use alongside the 'from' function found in from_utility
+
+echo "Requirements for $0"
+declare -A requirements
+requirements["$0"]='main_utils filename_utils'
+i=1
+
+# Iterate over each requirement by splitting the string
+for requirement in ${requirements["$0"]}; do
+    echo "Requirement $i: $requirement" 
+    ((i++))
+done
+
+exit
+
+# Log if condition is true
+if [[ "${conditions[log]}" == 'true' ]]; then
+	script_log
+elif [[ "${conditions[log]}" == 'false' ]]; then
+	:
+else
+	script_log
+	conditions[log]='true'
+#    script_notify save_and_notify "Unknown error occured" "Set log_condition to 1" "normal"
+
+fi

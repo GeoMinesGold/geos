@@ -1,0 +1,26 @@
+#!/bin/bash
+
+input_dir="$HOME/Downloads"
+
+if [[ ! -d ${input_dir} ]]; then
+    echo "Input directory doesn't exist"
+    exit 1
+fi
+
+mapfile -t input_dir_files < <(find "${input_dir}" -type f)
+num_input_files="${#input_dir_files[@]}"
+
+if [[ "${num_input_files}" -eq 0 ]]; then
+    echo "Input directory is empty"
+    exit 1
+fi
+
+for ((i=0; i<num_input_files; i++)); do
+    file="${input_dir_files[i]}"
+    if [[ "$(basename "${file}")" =~ \.pdf ]]; then
+        if ! [[ "$(file -b --mime-type "${file}")" == "application/pdf" ]]; then
+            echo "File ${file} is not a valid PDF document"
+            rm "${file}"
+        fi
+    fi
+done

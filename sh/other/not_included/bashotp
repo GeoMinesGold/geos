@@ -1,0 +1,39 @@
+#!/bin/bash
+
+# Function to parse otpauth URL and extract issuer and secret
+parse_otpauth_url() {
+    local otpauth_url="${1}"
+    local issuer=$(echo "${otpauth_url}" | sed -n 's/.*:\/\/totp\/\([^?]*\).*/\1/p' | cut -d ':' -f 1)
+    local secret=$(echo "${otpauth_url}" | grep -oP 'secret=\K[^&]*')
+    echo "${issuer}" "${secret}"
+}
+
+# Function to generate TOTP code
+generate_totp() {
+    local secret="${1}"
+    local totp_code=$(oathtool --totp -b "$secret")
+    echo "${totp_code}"
+}
+
+# Main script
+main() {
+    if [ $# -eq 1 ]; then
+        otpauth_url="${1}"
+    else
+        read -p "Enter otpauth URL: " otpauth_url
+    fi
+
+    # Parse otpauth URL to get issuer and secret
+    issuer_secret=($(parse_otpauth_url "${otpauth_url}"))
+    issuer="${issuer_secret[0]}"
+    secret="${issuer_secret[1]}"
+
+    # Generate TOTP code
+    totp_code=$(generate_totp "${secret}")
+
+    # Display TOTP code
+    echo "OTP: ${totp_code}"
+}
+
+# Run the main script
+main "${@}"

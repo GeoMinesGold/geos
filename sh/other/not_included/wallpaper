@@ -1,0 +1,30 @@
+#!/usr/bin/python3
+
+import numpy as np
+import matplotlib.pyplot as plt
+import noise
+
+# Generate plasma pattern with Perlin noise
+size = 2000
+scale = 200  # Adjust scale for larger features
+octaves = 32  # Number of levels of detail you want to generate
+persistence = 0.6  # Controls how quickly the amplitudes diminish for each successive octave
+lacunarity = 0.2   # Controls the frequency of the octaves
+
+world = np.zeros((size, size))
+for i in range(size):
+    for j in range(size):
+        world[i][j] = noise.pnoise2(i / scale, j / scale, octaves=octaves, persistence=persistence, lacunarity=lacunarity, base=0)
+
+# Normalize the values to [0, 1]
+world = (world - np.min(world)) / (np.max(world) - np.min(world))
+
+# Create a smooth color gradient
+colors = ['#1E88E5', '#64B5F6', '#E1F5FE', '#FFCC80', '#FF5722']  # Blue Shades, Light Blue, Orange, Deep Orange, Red
+cmap = plt.cm.colors.ListedColormap(colors)
+
+# Plot the plasma pattern
+plt.figure(figsize=(16, 9))
+plt.imshow(world, cmap=cmap, interpolation='lanczos')
+plt.axis('off')
+plt.savefig('plasma_wallpaper.png', bbox_inches='tight', pad_inches=0)

@@ -1,0 +1,62 @@
+#!/bin/bash
+
+# Declare arrays
+declare -A input_dir
+declare -A output_dir
+
+add_directory() {
+    local -n dir_array="${1}"
+    local dir="${2}"
+
+    dir_array["${dir}"]=""
+}
+
+# Add input directories
+while IFS= read -r line; do
+    add_directory "input_dir" "${line}"
+done < inputs.txt
+
+# Add output directories
+while IFS= read -r line; do
+    add_directory "output_dir" "${line}"
+done < outputs.txt
+
+# Function to check if directory exists and if empty 
+check_dir() {
+    local dir="${1}"
+    local result="false"
+
+    if [[ -d "${dir}" ]]; then
+        if [[ -n $(find "${dir}" -mindepth 1 -print -quit) ]]; then 
+            echo "true"
+        else
+            echo "empty"
+        fi
+    else
+        echo "null"
+    fi
+}
+
+# Check input directories
+for dir in "${!input_dir[@]}"; do
+    dir_status="$(check_dir "${dir}")"
+    input_dir["${dir}"]="${dir_status}"
+done
+
+# Set output directories
+for dir in "${!output_dir[@]}"; do
+    dir_status="$(check_dir "${dir}")"
+    output_dir["${dir}"]="${dir_status}"
+done
+
+# Exclude output directories
+output_dir[/media/ext]="false"
+
+# Echo output directories
+for dir in "${!input_dir[@]}"; do
+    echo "${dir}: ${input_dir[${dir}]}"
+done
+
+for dir in "${!output_dir[@]}"; do
+    echo "${dir}: ${output_dir[${dir}]}"
+done

@@ -1,0 +1,10 @@
+#!/bin/bash
+
+dir="/home/geo/Documents/txt/Clipboard/"
+
+xclip -sel primary < /dev/null
+xclip -sel clipboard < /dev/null
+xclip -sel secondary < /dev/null
+
+pkill xclip
+rm -rf ${dir}*

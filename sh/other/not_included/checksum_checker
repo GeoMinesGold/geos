@@ -1,0 +1,14 @@
+#!/bin/bash
+
+declare -a files=("f166725784.gpg" "f94201824.gpg" "f77503192.gpg" "f119234144.gpg" "f97754728.gpg" "f26801240.gpg" "f138881192.gpg" "f215984264.gpg" "f108294312.gpg" "f2322968.gpg" "f108298192.gpg")
+
+for (( i=0; i<${#files[@]}; i++ )); do
+    for (( j=i+1; j<${#files[@]}; j++ )); do
+        checksum1=$(sha256sum "${files[i]}")
+        checksum2=$(sha256sum "${files[j]}")
+
+        if [[ "${checksum1}" == "${checksum2}" ]]; then
+            echo "Files ${files[i]} and ${files[j]} match."
+        fi
+    done
+done

@@ -1,0 +1,108 @@
+#!/usr/bin/env bash
+
+initial_dir=$(pwd)
+current_selection=dir
+current_selection_type=dir
+
+find_files() {
+    if [[ "${1}" == 'dir' ]]; then
+        if [[ "${2}" == 'file' ]]; then
+            mapfile -t files < <(find . -mindepth 1 -maxdepth 1 -type f)
+        elif [[ "${2}" == 'dir' ]]; then
+            mapfile -t files < <(find . -mindepth 1 -maxdepth 1 -type d)
+        else
+            mapfile -t files < <(find . -mindepth 1 -maxdepth 1)
+        fi
+    elif [[ "${1}" == 'all' ]]; then
+        if [[ "${2}" == 'file' ]]; then
+            mapfile -t files < <(find . -mindepth 1 -type f)
+        elif [[ "${2}" == 'dir' ]]; then
+            mapfile -t files < <(find . -mindepth 1 -type d)
+        else
+            mapfile -t files < <(find . -mindepth 1)
+        fi
+    fi
+}
+
+music() {
+    ${HOME}/Documents/bin/sh/music "${@}"
+}
+
+get_basename() {
+    files_basename=()
+    files_display=()
+    declare -A basename_count
+    declare -A basename_fullpath
+
+    # Count basenames
+    for file in "${files[@]}"; do
+        local base_name=$(basename "${file}")
+        ((basename_count["${base_name}"]++))
+        basename_fullpath["${base_name}"]+="${file}"$'\n'
+    done
+
+    # Prepare display array
+    for file in "${files[@]}"; do
+        base_name="$(basename "${file}")"
+        if [[ "${basename_count[${base_name}]}" -gt 1 ]]; then
+            local relpath=$(realpath --relative-to="${initial_dir}" "${file}")
+            files_display+=("${relpath}")
+        else
+            files_display+=("${base_name}")
+        fi
+        files_basename+=("${base_name}")
+    done
+}
+
+get_selection() {
+    selection=$(printf "%s\n" "${files_display[@]}" | rofi -dmenu -i -p "Select a file or directory")
+}
+
+get_selection_full() {
+    for i in "${!files_display[@]}"; do
+        if [[ "${files_display[${i}]}" == "${selection}" ]]; then
+            selection_full="${files[${i}]}"
+            break
+        fi
+    done
+}
+
+while true; do
+    find_files "${current_selection}" "${current_selection_type}"
+    get_basename
+    get_selection
+    get_selection_full
+
+    if [[ -z "${selection}" ]]; then
+        if [[ "$(pwd)" == "${initial_dir}" ]]; then
+            break
+        else
+            cd ..
+        fi
+    elif [[ "${selection}" == '@' ]] || [[ "${current_selection_type}" == 'dir' ]] && [[ -d "${selection_full}" ]] && [[ -z $(find "${selection_full}" -mindepth 1 -maxdepth 1 -type d) ]]; then
+        echo "${files[@]}"
+        music "${selection_full}"
+        break
+    elif [[ "${selection}" == '!' ]]; then
+        break
+    elif [[ "${selection}" == '*f' ]]; then
+        current_selection_type=file
+    elif [[ "${selection}" == '*d' ]]; then
+        current_selection_type=dir
+    elif [[ "${selection}" == '**' ]]; then
+        current_selection_type=all
+    elif [[ "${selection}" == '*' ]]; then
+        if [[ "${current_selection}" == 'dir' ]]; then
+            current_selection=all
+        else
+            current_selection=dir
+        fi
+    elif [[ -d "${selection_full}" ]]; then
+        cd "${selection_full}"
+    else
+        xdg-open "${selection_full}"
+        break
+    fi
+done
+
+exit

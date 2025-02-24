@@ -1,0 +1,7 @@
+#!/bin/bash
+
+day="$(date '+%a')"
+date="$(date '+%b %e %Y')"
+full_dir="/home/geo/Documents/txt/Clipboard/${day} ${date}"
+
+cat "$full_dir/$(ls -t "$full_dir" | rofi -dmenu -i | tr -d "\n")" | xclip -sel clipboard

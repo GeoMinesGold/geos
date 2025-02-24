@@ -1,0 +1,8 @@
+#!/bin/bash
+
+device_ids=($(xinput list | grep 'pointer' | awk -F= '{print $2}' | awk '{print $1}' | tr '\n' ' ' | sed 's/ $//'))
+
+for id in "${device_ids[@]}"
+do
+    xinput enable "$id"
+done

@@ -1,0 +1,5 @@
+#!/bin/bash
+sudo systemctl stop dnsmasq
+sudo systemctl stop libvirtd
+sudo virsh net-start default
+sudo systemctl start libvirtd

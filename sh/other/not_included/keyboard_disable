@@ -1,0 +1,15 @@
+#!/bin/bash
+
+device_ids=($(xinput list | grep 'keyboard' | awk -F= '{print $2}' | awk '{print $1}' | tr '\n' ' ' | sed 's/ $//'))
+
+for id in "${device_ids[@]}"
+do
+    xinput disable "$id"
+done
+
+sleep 5
+
+for id in "${device_ids[@]}"
+do
+    xinput enable "$id"
+done

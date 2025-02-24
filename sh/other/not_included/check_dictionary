@@ -1,0 +1,65 @@
+#!/bin/bash
+
+dict_dir="/usr/share/dict"
+dictionaries=("${dict_dir}/words" "${dict_dir}/finnish" "${dict_dir}/french" "${dict_dir}/spanish")
+valid_dictionaries=()
+invalid_dictionaries=()
+
+for dictionary in "${dictionaries[@]}"; do
+    # Check if file exists
+    if ! [[ -f ${dictionary} ]]; then
+        echo "File '${dictionary}' does not exist."
+        continue
+    fi
+
+    # Check if file has at least 50,000 lines
+    line_count=$(wc -l < "${dictionary}")
+    if [[ "${line_count}" -lt 50000 ]]; then
+        echo "File '${dictionary}' has fewer than 50,000 lines."
+        continue
+    fi
+
+    # Count total number of words in the dictionary
+    total_words=$(wc -w < "${dictionary}")
+
+    # Calculate the threshold
+    threshold_percentage="5"
+    threshold=$(( total_words / threshold_percentage ))
+
+    # Check if total words has threshold amount of duplicate 4-letter or longer substrings 
+    duplicate_words=$(awk -v threshold="${threshold}" '{
+        for(len=4; len<=length($0); len++) {
+            for(i=1; i<=length($0)-len+1; i++) {
+                wordcount[substr($0, i, len)]++;
+            }
+        }
+    }
+    END {
+        for (word in wordcount) {
+            if (wordcount[word] >= threshold) {
+                print word;
+            }
+        }
+    }' "${dictionary}" | sort | uniq)
+
+    if [[ -n "${duplicate_words}" ]]; then
+        echo "File '${dictionary}' has duplicate 4-letter or longer substrings appearing in at least $(( 100 / threshold_percentage ))% of total words: ${duplicate_words}"
+        continue
+    fi
+
+    # Check if % of words longer than or equal to 8 letters is sufficient
+    long_words=$(awk '{ for(i=1; i<=NF; i++) { if(length($i) >= 8) count++ } } END { print count }' "${dictionary}")
+    percentage=$(( (long_words * 100) / total_words ))
+    if [[ "${percentage}" -lt 50 ]]; then
+        echo "File '${dictionary}' doesn't have enough words 8 letters or longer (${percentage}% found)."
+        continue
+    fi
+
+    # Add dictionary to valid_dictionaries array if it passes all checks
+    valid_dictionaries+=("${dictionary}")
+done
+
+# Output the valid dictionaries
+for valid_dictionary in "${valid_dictionaries[@]}"; do
+    echo "${valid_dictionary}"
+done

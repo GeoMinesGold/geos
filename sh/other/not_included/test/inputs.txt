@@ -1,0 +1,6 @@
+/home/geo/Documents
+/var
+/etc
+/home/geo/a
+/home/geo/b
+/home/geo/askdalskdlaskdl

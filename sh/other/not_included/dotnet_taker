@@ -1,0 +1,18 @@
+#!/bin/bash
+
+dir_name="$(rofi -dmenu -p 'Enter directory name')"
+[ -z "$dir_name" ] && dir_name="Untitled"
+
+script_name="$(rofi -dmenu -p 'Enter script name')"
+[ -z "$script_name" ] && script_name="Script"
+
+dir="/home/geo/Documents/dotnet/"
+date="$(date '+%a %b %e %Y')/"
+full_dir="${dir}${date}/"
+file="${full_dir}${dir_name}/${script_name} [$(pwgen -snc -1 9)].vbs"
+
+notify-send "VB.NET (dotnet)" "Opening $script_name in directory $dir_name"
+mkdir -p "$full_dir"
+dotnet new console -n "$dir_name" -o "${full_dir}${dir_name}"
+notify-send "VB.NET (dotnet)" "$script_name ready to run"
+alacritty -e vim "$file"

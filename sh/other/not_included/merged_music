@@ -1,0 +1,158 @@
+#!/bin/bash
+
+# Initialize variables
+initial_dir="$(pwd)"
+current_selection='dir'
+current_selection_type='dir'
+music_type=$(<"${HOME}/.local/share/music/type")
+socket="${HOME}/.config/mpv/socket"
+music_history="${HOME}/.local/share/music/history"
+directory="${1:-${HOME}/Music/Sabaton}"
+
+# Create necessary directories
+mkdir -p "$(dirname "${music_history}")"
+
+# Find files or directories based on current selection and type
+find_files() {
+    local search_type
+    case "${2}" in 
+        'file')
+            search_type="-type f"
+            ;;
+
+        'dir')
+            search_type="-type d"
+            ;;
+    esac
+    mapfile -t files < <(find . -mindepth 1 -maxdepth 1 ${search_type})
+}
+
+# Play music using mpv
+music() {
+    local action="${1}"
+    shift
+
+    case "${action}" in
+        pause)
+            socat - "${socket}" <<< 'cycle pause' &>/dev/null
+            ;;
+        vid)
+            local vid=$(echo '{ "command": ["get_property", "vid"] }' | socat - "${socket}" | awk -F ',' '{print $1}' | awk -F ':' '{print $2}')
+            vid=$([[ "${vid}" == "1" ]] && echo "no" || echo "1")
+            socat - "${socket}" <<< "set vid ${vid}" &>/dev/null
+            ;;
+        loop)
+            local loop=$(echo '{ "command": ["get_property", "loop"] }' | socat - "${socket}" | awk -F ',' '{print $1}' | awk -F ':' '{print $2}')
+            loop=$([[ "${loop}" == '"inf"' ]] && echo "no" || echo "inf")
+            socat - "${socket}" <<< "set loop ${loop}" &>/dev/null
+            ;;
+        start_paused)
+            start_paused="true"
+            ;;
+        list)
+            for ((i=0; i<${#playlist[@]}; i++)); do
+                echo "${i}: ${playlist[i]}"
+            done
+            ;;
+        next|prev|rand)
+            music_play "${action}"
+            ;;
+        *)
+            local current_index="${action}"
+            music_play "${current_index}"
+            ;;
+    esac
+}
+
+# Play music from the playlist
+music_play() {
+    local index="${1}"
+    local playlist_length="${#playlist[@]}"
+    
+    if [[ "${index}" == "rand" ]]; then
+        index=$((RANDOM % playlist_length))
+    elif [[ "${index}" == "next" ]]; then
+        index=$(<"${music_history}")
+        ((index++))
+    elif [[ "${index}" == "prev" ]]; then
+        index=$(<"${music_history}")
+        ((index--))
+    fi
+    
+    echo "${index}" > "${music_history}"
+    local video="${playlist[${index}]}"
+    local pause_option=$([[ "${start_paused}" == "true" ]] && echo "yes" || echo "no")
+    
+    kill "$(lsof -t "${socket}")" &>/dev/null
+    mpv "${video}" --pause="${pause_option}" --vid=no --input-ipc-server="${socket}" --player-operation-mode="cplayer" &>/dev/null
+}
+
+# Process file and directory basenames
+get_basename() {
+    declare -A basename_count
+    declare -A basename_fullpath
+
+    for file in "${files[@]}"; do
+        local base_name=$(basename "${file}")
+        ((basename_count["${base_name}"]++))
+        basename_fullpath["${base_name}"]+="${file}"$'\n'
+    done
+
+    for file in "${files[@]}"; do
+        local base_name=$(basename "${file}")
+        if [[ "${basename_count[${base_name}]}" -gt 1 ]]; then
+            local relpath=$(realpath --relative-to="${initial_dir}" "${file}")
+            files_display+=("${relpath}")
+        else
+            files_display+=("${base_name}")
+        fi
+        files_basename+=("${base_name}")
+    done
+}
+
+# Get user selection using rofi
+get_selection() {
+    selection=$(printf "%s\n" "${files_display[@]}" | rofi -dmenu -i -p "Select a file or directory")
+}
+
+# Get the full path of the selected item
+get_selection_full() {
+    for i in "${!files_display[@]}"; do
+        if [[ "${files_display[${i}]}" == "${selection}" ]]; then
+            selection_full="${files[${i}]}"
+            break
+        fi
+    done
+}
+
+# Main loop
+while true; do
+    find_files "${current_selection}" "${current_selection_type}"
+    get_basename
+    get_selection
+    get_selection_full
+
+    if [[ -z "${selection}" ]]; then
+        [[ "$(pwd)" == "${initial_dir}" ]] && break || cd ..
+    elif [[ "${selection}" == "@" || ("${current_selection_type}" == "dir" && -d "${selection_full}" && -z $(find "${selection_full}" -mindepth 1 -maxdepth 1 -type d)) ]]; then
+        music "${selection_full}"
+        break
+    elif [[ "${selection}" == "!" ]]; then
+        break
+    elif [[ "${selection}" == "*f" ]]; then
+        current_selection_type="file"
+    elif [[ "${selection}" == "*d" ]]; then
+        current_selection_type="dir"
+    elif [[ "${selection}" == "**" ]]; then
+        current_selection_type="all"
+    elif [[ "${selection}" == "*" ]]; then
+        current_selection=$([[ "${current_selection}" == "dir" ]] && echo "all" || echo "dir")
+    elif [[ -d "${selection_full}" ]]; then
+        cd "${selection_full}"
+    else
+        xdg-open "${selection_full}"
+        break
+    fi
+done
+
+exit

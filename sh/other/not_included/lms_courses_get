@@ -1,0 +1,31 @@
+#!/bin/bash
+
+aspx_auth='87F3347467F2F96E8884829A3A615595DF1CE83F1834A71CFA095CC62BB9E4A99185923D2248B54F1BED836EF0825CA792074AEEF7259E7A4324856C3965D5245BD622F490AA2C185D42C2325B45932641B0B67D975A9E095430F00BE50991D265E1DD3BCF2F4F5D82B8A57737C947EAE2970454872E339D972FF7BFC709DC9E'
+req_ver='MHjcNh2173_A7WXfpUPnd4jwsiRsfiF5ICCvtMWk6SdbIgu4zdnrkrFuwX_WJj8Kn1rm0VHwgApsr2gNAz6ap4TBcy-SRxM9ejtYFxGuTsw1'
+asp_net='ycubfymkf1vgcdxc5d52jwak'
+lms_cookie='xP3kGSzUiIvIu1cPfrJ12mq9CHQQRKkJmjjFNVgrLL6HZXRqwstfaIwRC5ivLrLMrRPftumUawb9RAqIkfPRJmyA1mbPLUA4K9fxVt8hnJqX4jI7VRxTcs9c1PQIUSJZNxsif50LrjrdWRGB115CaMB-ptPHsENZasc_-d3OvG_6i4NkMa-J01m72MTYZILq5oIPmGvKIRS7eBaFDo3ABndYrYvCv6OBfSGkOiGAEH9euT44RJO_E4j7_d2Qc8KcrSFtAm5MWRjwr-KMBnjAA3iknakFHLG6b7JBAsx1GkvrD-7glZ0zBN-NMZKdh1re_gI7KTMWUAo-8HHB6lEN_pCrV_tsKaSerihavuj3lG2bSlGcVQaoKlqImBlUW1yHSMKV7T6dsk3Q-oH3t8JA1hJ23NWNE5HR2kmRmMTy4RNUjZ-okGxWTuJHl8-ByolJBEmAXqcqGaZ1MNJO6JtpTA2'
+
+wget -nd -nc -r -l '0' -p -H --ignore-case -A "pdf" -e 'robots=off' -I '/Files' -P "/home/geo/Documents/LMS/" -o "/home/geo/Documents/txt/logs/lms/$(xprop -id $(xprop -root -f _NET_ACTIVE_WINDOW 0x " \$0\\n" _NET_ACTIVE_WINDOW | awk "{print \$2}") | awk '/WM_CLASS/{print $4}' | sed 's/\"//g') $(date '+%a %b %e %Y %R:%S [%Nns]') [$(pwgen -snc -1 9)].log" \
+--header "Cookie: ASP.NET_SessionId="$asp_net"; __RequestVerificationToken="$req_ver"; .ASPXAUTH="$aspx_auth" LMSCookie="$lms_cookie"" \
+--header 'Host: lms.stfatima.edu.eg' -U 'Mozilla/5.0 (X11; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/117.0' \
+--header 'Accept-Language: en-US,en;q=0.5' --referer 'https://lms.stfatima.edu.eg/en/' \
+--header 'DNT: 1' \
+--header 'Sec-Fetch-Dest: document' \
+--header 'Sec-Fetch-Mode: navigate' \
+--header 'Sec-Fetch-Site: same-origin' \
+--header 'Sec-Fetch-User: ?1' \
+'https://lms.stfatima.edu.eg/en/Student/StudentCourses/List/104639' \
+'https://lms.stfatima.edu.eg/en/Student/StudentCourses/List/104641' \
+'https://lms.stfatima.edu.eg/en/Student/StudentCourses/List/104643' \
+'https://lms.stfatima.edu.eg/en/Student/StudentCourses/List/104644' \
+'https://lms.stfatima.edu.eg/en/Student/StudentCourses/List/104640' \
+'https://lms.stfatima.edu.eg/en/Student/StudentCourses/List/104650' \
+'https://lms.stfatima.edu.eg/en/Student/StudentCourses/List/104645' \
+'https://lms.stfatima.edu.eg/en/Student/StudentCourses/List/104649' \
+'https://lms.stfatima.edu.eg/en/Student/StudentCourses/List/104646' \
+'https://lms.stfatima.edu.eg/en/Student/StudentCourses/List/104648'
+# 'https://lms.stfatima.edu.eg/en/Message/Message' \
+# 'https://lms.stfatima.edu.eg/en/Message/Details/94949?AllowSendMessage=True&Tab=2&LMSSettingsID=0' \
+# 'https://lms.stfatima.edu.eg/en/GradeReport/GradeFiles' \
+# 'https://lms.stfatima.edu.eg/en/GradeReport/List' \
+notify-send "All Files Downloaded" "Check your LMS folder for content"

@@ -1,0 +1,50 @@
+#!/bin/bash
+
+build_tree() {
+    local file=$1
+    local tree=()
+    while IFS= read -r dir || [[ -n $dir ]]; do
+        IFS='/' read -ra parts <<< "$dir"
+        local current=${tree[@]}
+        for part in "${parts[@]}"; do
+            if [[ ! ${current[$part]+_} ]]; then
+                current[$part]=()
+            fi
+            current=${current[$part]}
+        done
+    done < "$file"
+    echo "${tree[@]}"
+}
+
+print_tree() {
+    local -n tree=$1
+    local level=$2
+    for key in "${!tree[@]}"; do
+        printf "%*s|-- %s\n" $((level * 4)) "" "$key"
+        print_tree "${tree[$key]}" $((level + 1))
+    done
+}
+
+main() {
+    if [ "$#" -ne 1 ]; then
+        echo "Usage: ./create_tree.sh <file>"
+        return 1
+    fi
+
+    file_path=$1
+    if [ ! -f "$file_path" ]; then
+        echo "Error: File not found"
+        return 1
+    fi
+
+    dirs=()
+    while IFS= read -r line; do
+        dirs+=("$line")
+    done < "$file_path"
+
+    tree=$(build_tree "$file_path")
+    declare -A tree="$tree"
+    print_tree tree 0
+}
+
+main "$@"

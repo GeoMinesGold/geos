@@ -1,0 +1,4 @@
+#!/bin/bash
+
+latest_file="$(find ${HOME}/Videos -type f -exec realpath {} \; | while IFS= read -r file; do stat --format='%Y :%y :%n' "${file}"; done | sort -nr | head -n 1 | awk -F ':' '{print substr($0, index($0, $5))}')"
+mpv "${latest_file}"

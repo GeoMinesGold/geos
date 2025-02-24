@@ -1,0 +1,334 @@
+\documentclass[a4paper,twoside,11pt]{book}
+
+% Page layout and margins
+\usepackage{geometry}
+\geometry{margin=2.5cm}
+
+% Color 
+\usepackage[x11names]{xcolor}
+
+% Input encoding and typography
+\usepackage[utf8]{inputenc}
+\usepackage{erewhon}
+\usepackage{lettrine}
+\usepackage{amsmath, amssymb}
+\usepackage{GoudyIn}
+\usepackage{niceframe}
+\usepackage{swrule}
+\usepackage{microtype}
+
+% Graphics and figures
+\usepackage{graphicx}
+\usepackage{tikz}
+\usetikzlibrary{calc,shapes.geometric,patterns,positioning}
+\usepackage{pgfplots}
+\usepackage{xkeyval}
+
+% Fancy headers and footers
+\usepackage{fancyhdr}
+\fancyhf{}
+\fancyhead[L]{\leftmark}
+\fancyhead[R]{\thepage}
+\fancyfoot[C]{}
+\renewcommand{\headrulewidth}{1pt}
+\renewcommand{\footrulewidth}{0pt}
+
+% Section title formatting
+\usepackage{titlesec}
+\titleformat{\chapter}[display]{\normalfont\huge\bfseries\centering}{\chaptertitlename\ \thechapter}{20pt}{\Huge}
+\titleformat{\section}{\normalfont\Large\bfseries\centering}{\thesection}{1em}{}
+\titleformat{\subsection}{\normalfont\large\bfseries}{\thesubsection}{1em}{}
+\titleformat{\subsubsection}{\normalfont\normalsize\bfseries}{\thesubsubsection}{1em}{}
+
+% Hyperlinks and superscript references
+\usepackage{hyperref}
+\usepackage{cleveref}
+
+% Table of contents formatting
+\usepackage{tocloft}
+\renewcommand{\contentsname}{\centering\textbf{Table of Contents}}
+\renewcommand{\cftchapfont}{\bfseries}
+\renewcommand{\cftsecfont}{\bfseries}
+\renewcommand{\cftsubsecfont}{\bfseries}
+\renewcommand{\cftchappagefont}{\bfseries}
+\renewcommand{\cftsecpagefont}{\bfseries}
+\renewcommand{\cftsubsecpagefont}{\bfseries}
+
+% Code listings and highlighting
+\usepackage{listings}
+\usepackage{tcolorbox}
+\tcbuselibrary{listingsutf8}
+
+% Define the colors for the code highlighting
+\definecolor{codebg}{rgb}{0.95,0.95,0.95}
+\definecolor{codeborder}{rgb}{0.8,0.8,0.8}
+
+% Define the style for the code listings
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{codebg},
+    frame=single,
+    basicstyle=\ttfamily,
+    breakatwhitespace=false,
+    breaklines=true,
+    captionpos=b,
+    commentstyle=\color{gray},
+    keywordstyle=\color{blue},
+    stringstyle=\color{red},
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
+    tabsize=2
+}
+
+% Custom box for explanations
+\tcbset{colback=blue!5!white, colframe=blue!75!black, fonttitle=\bfseries}
+
+% Custom Chapter Colors
+\newcommand{\chaptercolor}{}
+\newcommand{\chaptercolors}[1]{%
+  \ifcase#1%
+    \renewcommand{\chaptercolor}{cyan!20!white}\or % Chapter 1
+    \renewcommand{\chaptercolor}{red!20!white}\or  % Chapter 2
+    \renewcommand{\chaptercolor}{yellow!20!white}\or % Chapter 3
+    \renewcommand{\chaptercolor}{brown!20!white}  % Chapter 4
+  \else
+    \renewcommand{\chaptercolor}{white}
+  \fi
+}
+
+% Title page
+\begin{document}
+
+\begin{titlepage}
+    \begin{tikzpicture}[remember picture,overlay,inner sep=0,outer sep=0]
+        \fill[orange!50!yellow] (current page.south west) rectangle (current page.north east);
+        % Uncomment the next line and replace 'cover_image.png' with the path to your image
+        % \node[anchor=center,inner sep=0] at (current page.center) {\includegraphics[width=0.7\textwidth]{cover_image.png}};
+        \node[anchor=south, yshift=-3cm] at (current page.north) {\
+\huge\bfseries Mathematics IGCSE Notes};
+        \node[anchor=north, yshift=3cm] at (current page.south) {\Large Geo};
+        \node[anchor=north, yshift=1.5cm] at (current page.south) {\large \today};
+    \end{tikzpicture}
+\end{titlepage}
+
+% Table of Contents
+\tableofcontents
+
+% Introduction Page
+\chapter*{Introduction}
+\addcontentsline{toc}{chapter}{Introduction}
+\begin{center}
+    \begin{tikzpicture}[remember picture,overlay,inner sep=0,outer sep=0]
+        \fill[cyan!20!white,rounded corners=15pt] (current page.south west) rectangle (current page.north east);
+        \node[anchor=center,inner sep=0] at (current page.center) {
+            \parbox{0.8\textwidth}{
+                \centering
+                \textbf{Welcome to the Mathematics IGCSE Notes!}
+                This book is designed to provide a comprehensive overview of the key concepts in mathematics for IGCSE students. It includes explanations, examples, and visualizations to help you understand and master the material. We hope you find this book both informative and enjoyable.
+            }
+        };
+    \end{tikzpicture}
+\end{center}
+
+% Main Matter
+\mainmatter
+
+% Chapter on Complex Numbers
+\chapter{Complex Numbers}
+\chaptercolors{1}
+\section{Introduction}
+Complex numbers are numbers that include both a real part and an imaginary part. They are written in the form \( a + bi \), where \( a \) and \( b \) are real numbers and \( i \) is the imaginary unit with the property \( i^2 = -1 \).
+
+\section{Operations with Complex Numbers}
+\subsection{Addition and Subtraction}
+To add or subtract complex numbers, simply add or subtract their real and imaginary parts separately.
+\[
+(a + bi) + (c + di) = (a + c) + (b + d)i
+\]
+\[
+(a + bi) - (c + di) = (a - c) + (b - d)i
+\]
+
+\subsection{Multiplication}
+Multiplying complex numbers involves using the distributive property and remembering that \( i^2 = -1 \).
+\[
+(a + bi)(c + di) = ac + adi + bci + bdi^2 = (ac - bd) + (ad + bc)i
+\]
+
+\subsection{Division}
+To divide complex numbers, multiply the numerator and the denominator by the conjugate of the denominator.
+\[
+\frac{a + bi}{c + di} = \frac{(a + bi)(c - di)}{(c + di)(c - di)} = \frac{(ac + bd) + (bc - ad)i}{c^2 + d^2}
+\]
+
+% Code Listing Example
+\section{Code Listing Example}
+Here is an example of a Python code that demonstrates basic operations with complex numbers:
+
+\begin{lstlisting}[style=mystyle, caption={Basic operations with complex numbers in Python}]
+# Define complex numbers
+z1 = complex(2, 3)
+z2 = complex(1, 4)
+
+# Addition
+z_add = z1 + z2
+
+# Subtraction
+z_sub = z1 - z2
+
+# Multiplication
+z_mul = z1 * z2
+
+# Division
+z_div = z1 / z2
+
+# Display results
+print(f"Addition: {z_add}")
+print(f"Subtraction: {z_sub}")
+print(f"Multiplication: {z_mul}")
+print(f"Division: {z_div}")
+\end{lstlisting}
+
+% Chapter on Matrices
+\chapter{Matrices}
+\chaptercolors{2}
+\section{Introduction}
+Matrices are rectangular arrays of numbers that can be used to represent systems of linear equations, transformations, and more. A matrix is typically denoted by a capital letter and its elements are arranged in rows and columns.
+
+\section{Matrix Operations}
+\subsection{Addition and Subtraction}
+To add or subtract matrices, simply add or subtract their corresponding elements. This operation is only possible if the matrices have the same dimensions.
+\[
+\begin{pmatrix}
+a & b \\
+c & d
+\end{pmatrix}
++
+\begin{pmatrix}
+e & f \\
+g & h
+\end{pmatrix}
+=
+\begin{pmatrix}
+a+e & b+f \\
+c+g & d+h
+\end{pmatrix}
+\]
+
+\subsection{Multiplication}
+Matrix multiplication involves the dot product of rows and columns. The product of two matrices \(A\) and \(B\) is defined if the number of columns in \(A\) is equal to the number of rows in \(B\).
+\[
+\begin{pmatrix}
+a & b \\
+c & d
+\end{pmatrix}
+\begin{pmatrix}
+e & f \\
+g & h
+\end{pmatrix}
+=
+\begin{pmatrix}
+ae+bg & af+bh \\
+ce+dg & cf+dh
+\end{pmatrix}
+\]
+
+\section{Determinants and Inverses}
+The determinant of a matrix is a scalar value that can be computed from its elements and provides important properties about the matrix. The inverse of a matrix \(A\) is denoted \(A^{-1}\) and satisfies \(AA^{-1} = I\), where \(I\) is the identity matrix.
+
+% Chapter on Functions
+\chapter{Functions}
+\chaptercolors{3}
+\section{Introduction}
+A function is a relation between a set of inputs and a set of permissible outputs. Functions are fundamental in mathematics and are used to describe various phenomena.
+
+\section{Types of Functions}
+\subsection{Linear Functions}
+A linear function has the form \( f(x) = mx + b \) where \(m\) is the slope and \(b\) is the y-intercept.
+
+\subsection{Quadratic Functions}
+A quadratic function has the form \( f(x) = ax^2 + bx + c \). Its graph is a parabola.
+
+\subsection{Exponential Functions}
+An exponential function has the form \( f(x) = a \cdot b^x \) where \(a\) is a constant and \(b\) is the base of the exponential.
+
+\subsection{Logarithmic Functions}
+A logarithmic function is the inverse of an exponential function and has the form \( f(x) = \log_b(x) \), where \(b\) is the base of the logarithm.
+
+\section{Graphing Functions}
+Understanding the graph of a function is crucial for visualizing and interpreting its behavior.
+
+\begin{center}
+\begin{tikzpicture}
+\begin{axis}[
+    axis lines = middle,
+    xlabel = $x$,
+    ylabel = $f(x)$,
+    legend pos=outer north east
+]
+% Linear Function
+\addplot[
+    domain=-10:10, 
+    samples=100, 
+    color=blue,
+]
+{2*x + 1};
+\addlegendentry{Linear $f(x) = 2x + 1$}
+
+% Quadratic Function
+\addplot[
+    domain=-10:10, 
+    samples=100, 
+    color=red,
+]
+{0.5*x^2 - 3*x + 2};
+\addlegendentry{Quadratic $f(x) = 0.5x^2 - 3x + 2$}
+
+% Exponential Function
+\addplot[
+    domain=-10:10, 
+    samples=100, 
+    color=green,
+]
+{2^x};
+\addlegendentry{Exponential $f(x) = 2^x$}
+
+% Logarithmic Function
+\addplot[
+    domain=0.1:10, 
+    samples=100, 
+    color=purple,
+]
+{ln(x)};
+\addlegendentry{Logarithmic $f(x) = \ln(x)$}
+\end{axis}
+\end{tikzpicture}
+\end{center}
+
+% Chapter on Geometry
+\chapter{Geometry}
+\chaptercolors{4}
+\section{Introduction}
+Geometry is the branch of mathematics concerned with the properties and relations of points, lines, surfaces, and solids. It includes concepts like angles, triangles, circles, and polygons.
+
+\section{Basic Geometric Shapes}
+\subsection{Triangles}
+A triangle is a polygon with three edges and three vertices. The sum of the interior angles of a triangle is always 180 degrees.
+
+\subsection{Circles}
+A circle is a simple closed shape where all points are equidistant from a fixed point called the center. The distance from the center to any point on the circle is the radius.
+
+\subsection{Polygons}
+A polygon is a plane figure with at least three straight sides and angles. Examples include triangles, quadrilaterals, pentagons, and hexagons.
+
+\section{Theorems and Proofs}
+\subsection{Pythagorean Theorem}
+In a right-angled triangle, the square of the length of the hypotenuse is equal to the sum of the squares of the lengths of the other two sides.
+\[
+c^2 = a^2 + b^2
+\]
+
+\subsection{Circle Theorems}
+Various theorems describe the properties of circles, such as the angles subtended by the same arc and the angle in a semicircle being a right angle.
+
+\end{document}

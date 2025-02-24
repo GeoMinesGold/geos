@@ -1,0 +1,150 @@
+#!/bin/bash
+
+# Get directories
+if [[ -z "${scripts_dir}" ]]; then
+    readonly scripts_dir="${HOME}/Documents/Scripts"
+fi
+
+if [[ -z "${sh_dir}" ]]; then
+    readonly sh_dir="${scripts_dir}/sh"
+fi
+
+# Get script_conditions file
+readonly script_conditions_file=$(<"${scripts_dir}/script_conditions")
+
+if [[ ! -f "${script_conditions_file}" ]]; then
+    script_notify save_and_notify "Manager failed" "Conditions file doesn't exist" "critical" "1"
+fi
+
+if [[ -z "$(<script_conditions_file)" ]]; then
+    script_notify "Manager failed" "Conditions file is empty" "critical" "1"
+fi
+
+# Declare an associative array to store the condition-output pairs
+declare -A script_conditions
+
+# Loop through each line in the file and store the output
+while IFS= read -r line; do
+#    condition_name=$(echo "${line}" | awk -F ':' '{print $1}')
+#    condition_value=$(echo "${line}" | awk -F ':' '{print $2}')
+    IFS=':' read -r condition_name condition_value <<< "${line}"
+    script_conditions["${condition_name}"]="${condition_value}"
+done <<< "${script_conditions_file}"
+
+if [[ -z "${manager_state[*]}" ]]; then
+    script_notify save_and_notify "Manager failed" "FATAL error: manager_state is NULL" "critical" "1"
+fi
+
+if [[ " ${manager_state[*]} " =~ 'disable' ]]; then
+    script_conditions[user_input]='false'
+    script_conditions[selection]='false'
+    script_conditions[clipboard]='false'
+    script_conditions[dir_name]='false'
+    script_conditions[dir_window]='false'
+fi
+
+if [[ " ${manager_state[*]} " =~ 'clipboard' ]]; then
+    script_conditions[clipboard]='true'
+else
+    script_conditions[clipboard]='false'
+fi
+
+if [[ " ${manager_state[*]} " =~ 'selection' ]]; then
+    script_conditions[selection]='true'
+else
+    script_conditions[selection]='false'
+fi
+
+if [[ " ${manager_state[*]} " =~ 'input' ]]; then
+    script_conditions[user_input]='true'
+else
+    script_conditions[user_input]='false'
+fi
+
+if [[ " ${manager_state[*]} " =~ 'dir_name' ]]; then
+    script_conditions[dir_name]='true'
+else
+    script_conditions[dir_name]='false'
+fi
+
+if [[ " ${manager_state[*]} " =~ 'dir_window' ]]; then
+    script_conditions[dir_window]='true'
+else
+    script_conditions[dir_window]='false'
+fi
+if [[ "${conditions[dir_window]}" == 'true' ]]; then
+    active_window_dir="$(xprop -id "$(xprop -root -f _NET_ACTIVE_WINDOW 0x " \$0\n" _NET_ACTIVE_WINDOW | awk '{print $2}')" | awk '/WM_CLASS/{print $4}' | sed 's/\"//g')"
+elif [[ "${conditions[dir_window]}" == 'false' ]]; then
+    active_window_dir=
+else
+    active_window_dir=
+    rofi_user_input=
+    script_notify save_and_notify 'Unknown error occured' 'Set active_window_dir to NULL' 'normal'
+fi
+
+if [[ "${script_conditions[input]}" == 'mode_default' ]]; then
+	:
+elif [[ "${script_conditions[input]}" == 'mode_1' ]]; then
+	script_conditions[selection]='true'
+	script_conditions[clipboard]='true'
+	script_conditions[user_input]='false'
+	script_conditions[dir_name]='false'
+else
+script_notify save_and_notify 'Note-taking failed' "FATAL error occured, input_condition is set to ${scripts_conditions[input]}" 'critical' '1'
+fi
+
+if [[ "${script_conditions[force_input]}" == 'true' ]]; then
+	script_conditions[selection]='false'
+	script_conditions[clipboard]='false'
+	script_conditions[user_input]='false'
+	script_conditions[dir_name]='false'
+    script_notify save_and_notify 'Note-taking failed' 'Input is turned off' 'normal' '1'
+elif [[ "${script_conditions[force_input]}" = 'false' ]]; then
+	:
+else
+script_notify save_and_notify 'Note-taking failed' "FATAL error occured, force_input_condition is set to ${force_input_condition}" 'critical' '1'
+fi
+
+if [[ "${script_conditions[selection]}" == 'true' ]]; then
+	buffers[selection]="$(xclip -o -sel primary 2>/dev/null | tr -d "\n")"
+elif [[ "${script_conditions[selection]}" == 'false' ]]; then
+	buffers[selection]=
+else
+	buffers[selection]=
+    script_notify save_and_notify "Unknown error occured" "Set selection_condition to NULL" "normal"
+fi
+
+if [[ "${script_conditions[clipboard]}" == 'true' ]]; then
+	buffers[clipboard]="$(xclip -o -sel clipboard 2>/dev/null | tr -d "\n")"
+elif [[ "${script_conditions[clipboard]}" = 'false' ]]; then
+	buffers[clipboard]=
+else
+	buffers[clipboard]=
+    script_notify save_and_notify "Unknown error occured" "Set clipboard_condition to NULL" "normal"
+fi
+
+call_user_input() {
+	buffers[input]=$(rofi -dmenu -p "Enter your input")
+}
+
+if [[ "${conditions[user_input]}" == 'true' ]]; then
+	call_user_input
+elif [[ "${conditions[user_input]}" == 'false' ]]; then
+	buffers[input]=
+else
+	buffers[input]=
+    script_notify save_and_notify "Unknown error occured" "Set user_input_condition to NULL" "normal"
+fi
+
+call_dir_input() {
+	rofi_user_input=$(rofi -dmenu -p "Enter your input for directory")
+}
+
+if [[ "${conditions[dir_name]}" == 'true' ]]; then
+	call_dir_input
+elif [[ "${conditions[dir_name]}" = 'false' ]]; then
+	rofi_user_input=
+else
+	rofi_user_input=
+    script_notify save_and_notify "Unknown error occured" "Set rofi_user_input to NULL" "normal"
+fi

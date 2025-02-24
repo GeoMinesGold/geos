@@ -1,0 +1,202 @@
+#!/bin/bash
+
+declare -A funcs vars
+
+source_file_subshell() {
+    local file="${1}"
+    local func var
+    local -A local_funcs local_vars
+
+    (
+        tmp_func_file="$(mktemp)"
+        tmp_var_file="$(mktemp)"
+        tmp_funcs_values_file="$(mktemp)"
+        tmp_vars_values_file="$(mktemp)"
+        
+        source "${file}"
+
+        declare -F | awk '{print $3}' > "${tmp_func_file}"
+        declare -p | awk -F '[ =]' '/^declare/ {print $3}' > "${tmp_var_file}"
+
+        while read -r func; do
+            local_funcs["${func}"]="$(declare -f "${func}")"
+        done < "${tmp_func_file}"
+
+        while read -r var; do
+            local_vars["${var}"]="$(declare -p "${var}")"
+        done < "${tmp_var_file}"
+
+        # Serialize arrays to files
+        for key in "${!local_funcs[@]}"; do
+            echo "$key|${local_funcs[$key]}" >> "${tmp_funcs_values_file}"
+        done
+
+        for key in "${!local_vars[@]}"; do
+            echo "$key|${local_vars[$key]}" >> "${tmp_vars_values_file}"
+        done
+
+        rm "${tmp_func_file}" "${tmp_var_file}"
+        
+        # Cat the serialized values to pass them to the parent shell
+        cat "${tmp_funcs_values_file}"
+        echo "---"
+        cat "${tmp_vars_values_file}"
+        rm "${tmp_funcs_values_file}" "${tmp_vars_values_file}"
+    )
+}
+
+# Deserialize the arrays in the main shell
+deserialize_arrays() {
+    local input="$1"
+    local reading_funcs=true
+
+    while IFS= read -r line; do
+        if [[ "$line" == "---" ]]; then
+            reading_funcs=false
+            continue
+        fi
+        
+        if $reading_funcs; then
+            key="${line%%|*}"
+            value="${line#*|}"
+            funcs["$key"]="$value"
+        else
+            key="${line%%|*}"
+            value="${line#*|}"
+            vars["$key"]="$value"
+        fi
+    done <<< "$input"
+}
+
+# Example usage
+result="$(source_file_subshell "${1}")"
+deserialize_arrays "${result}"
+
+# Output collected functions and variables for debugging
+for func in "${!funcs[@]}"; do
+    echo "Function: ${func}"
+    echo "${funcs[$func]}"
+done
+
+for var in "${!vars[@]}"; do
+    echo "Variable: ${var}"
+    echo "${vars[$var]}"
+done
+
+# Utility to import select parts from a script
+# Requires main_utils
+
+# Function to source file in a subshell and return values
+source_file() {
+    local file="${1}"
+    local vars funcs
+
+    chk_fl "${file}" || return 1
+    (
+        source "${file}"
+        vars="$(declare -p 2>/dev/null)"
+        funcs="$(declare -f 2>/dev/null)"
+    )
+    echo -e "vars: ${vars}\n\nfuncs: ${funcs}"
+}
+
+# Function to source a file within a subshell and return the required content
+get_from_file() {
+    local get_type="${1}"
+    local file="${2}"
+    local flags
+
+    if [[ -n "${file}" ]]; then
+        if [[ -f "${file}" ]]; then
+            case "${get_type}" in
+                'funcs')
+                    declare_flags='-f'
+                    ;;
+                'vars')
+                    declare_flags='-p'
+                    ;;
+                *)
+                    echo "Invalid type '${get_type}'"
+                    return 1
+                    ;;
+            esac
+            (source "${file}" &>/dev/null; declare "${declare_flags}")
+        else
+            echo "File '${file}' does not exist"
+            return 2
+        fi
+    else
+        echo 'No filename entered'
+        return 3
+    fi
+}
+
+# Function to check if a function exists in a file
+check_func_file() {
+    local func_name="${1}"
+    local file="${2}"
+    (source "${file}" &>/dev/null; declare -F "${func_name}" &>/dev/null)
+    return $?
+}
+
+# Function to get a function definition from a file
+get_func_file() {
+    local func_name="${1}"
+    local file="${2}"
+    (source "${file}" &>/dev/null; declare -f "${func_name}")
+}
+
+# Function to source part of file
+from() {
+    local file
+    if [[ "${1}" == /* ]]; then
+        file="${1}"
+    else
+        file="$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/${1}"
+    fi
+
+    if [[ "${2}" == 'src' ]]; then
+        case "${3}" in
+            'func' | 'funcs' | 'function' | 'functions') 
+                shift 3
+                local funcs=("${@}")
+
+                for func in "${funcs[@]}"; do
+                    if check_func_file "${func}" "${file}"; then
+                        eval "$(get_func_file "${func}" "${file}")"
+                    else
+                        echo "Error: Function ${func} not found in ${file}"
+                        return 1
+                    fi
+                done
+                ;;
+            'var' | 'vars' | 'variable' | 'variables')
+                shift 3
+                local var_list="$(get_from_file vars "${file}")"
+                local vars=("${@}")
+
+                for var in "${vars[@]}"; do
+                    local var_code="$(grep -o "${var}.*" <<< "${var_list}")"
+                    echo "VAR_CODE: ${var_code}"
+
+                    if [[ -n "${var_code}" ]]; then
+                        eval "${var_code}"
+                    else
+                        echo "Error: Variable ${var} not found in ${file}"
+                        return 1
+                    fi
+                done
+                ;;
+            *)
+                echo "Invalid option '${3}'"
+                return 1
+                ;;
+        esac
+    else
+        echo "Invalid option '${2}'"
+        return 1
+    fi
+}
+
+# from FILE src function FUNCTION1 FUNCTION2
+# from FILE src variable VAR1 VAR2

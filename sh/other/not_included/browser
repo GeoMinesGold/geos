@@ -1,0 +1,18 @@
+#!/bin/bash
+#window="$(xdotool search --name "Mozilla Firefox" | head -1)"
+#xdotool key --window "$window" ctrl+t ctrl+v Return 
+mouse=$(xclip -o -sel primary)
+clipboard=$(xclip -o -sel clipboard)
+
+if [[ -z "${mouse}" ]]; then
+    if [[ -z "${clipboard}" ]]; then
+        true
+    else
+    final="${clipboard}"
+    fi
+else
+    final="${mouse}"
+fi
+if [[ "${1}" == 'search' ]]; then
+    firefox --search "${final}"
+fi

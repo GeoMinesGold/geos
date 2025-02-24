@@ -1,0 +1,92 @@
+#!/bin/bash
+
+# Declare input associative array and output directories
+declare -A input_dir
+output_dirs=("${HOME}/usb1" "${HOME}/usb2")  # Add your output directories here
+
+# Function to prompt for directories and store them in an associative array
+add_directories() {
+    local -n dir_array=$1 # Pass by reference
+    local dir_type=$2
+    echo "Enter ${dir_type} directories (type 'exit' to stop):"
+    while true; do
+        read -r dir
+        if [[ "$dir" == "exit" ]]; then
+            break
+        else
+            dir_array["$dir"]=""
+        fi
+    done
+}
+
+# Add input directories
+add_directories input_dir "input"
+
+# Function to check if a directory exists and is not empty
+check_dir() {
+    local dir=$1
+    local result=false
+
+    if [[ -d "$dir" && -n "$(find "$dir" -mindepth 1 -print -quit)" ]]; then
+        result=true
+    fi
+
+    echo "$result"
+}
+
+# Check input directories
+for dir in "${!input_dir[@]}"; do
+    dir_status=$(check_dir "$dir")
+    input_dir["$dir"]=$dir_status
+done
+
+# Function to create a snapshot directory
+create_snapshot_dir() {
+    local base_dir=$1
+    local snapshot_dir="${base_dir}/$(date +"%a %b %d %Y")/Snapshot_$(date +"%H_%M_%S")"
+    mkdir -p "$snapshot_dir"
+    echo "$snapshot_dir"
+}
+
+# Function to find counterparts of files and update them
+find_and_update_files() {
+    local file=$1
+    local base_name=$(basename "$file")
+    local snapshot_needed=false
+    local snapshot_dir
+
+    for output_dir in "${output_dirs[@]}"; do
+        snapshot_dir=$(create_snapshot_dir "$output_dir")
+        local file_found=false
+
+        for output_file in $(find "$output_dir" -type f -name "$base_name"); do
+            file_found=true
+            if diff -q "$file" "$output_file" > /dev/null; then
+                echo "Found exact match for '$file' in '$output_file'"
+            else
+                echo "Differences found for '$file' in '$output_file'"
+                cp "$output_file" "$snapshot_dir"
+                cp "$file" "$output_file"
+                snapshot_needed=true
+            fi
+        done
+
+        if [ "$file_found" = false ]; then
+            echo "No counterpart found for '$file' in '$output_dir', copying new file."
+            cp "$file" "$output_dir"
+        fi
+
+        if [ "$snapshot_needed" = true ]; then
+            echo "Snapshot created at '$snapshot_dir'"
+        fi
+    done
+}
+
+# Process each file in input directories
+for dir in "${!input_dir[@]}"; do
+    if [[ "${input_dir[$dir]}" == "true" ]]; then
+        while IFS= read -r -d '' file; do
+            find_and_update_files "$file"
+        done < <(find "$dir" -type f -print0)
+    fi
+done

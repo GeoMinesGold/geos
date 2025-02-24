@@ -1,0 +1,2 @@
+#!/bin/bash 
+pass otp .2fa/"$(ls -1 ~/.password-store/.2fa/ | cut -d'.' -f1 | rofi -dmenu)" | xclip -sel c 

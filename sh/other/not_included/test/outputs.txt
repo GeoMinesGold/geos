@@ -1,0 +1,4 @@
+/media/ext
+/media/blockususususus
+/media/blockus
+/media/hdd

@@ -1,0 +1,30 @@
+#!/bin/bash
+
+DISPLAY=':0'
+filename1="/home/geo/Documents/txt/logs/logkeys/event4/$(xprop -d "$DISPLAY" -id $(xprop -d "$DISPLAY" -root -f _NET_ACTIVE_WINDOW 0x " \$0\\n" _NET_ACTIVE_WINDOW | awk "{print \$2}") | awk '/WM_CLASS/{print $4}' | sed 's/\"//g') $(date '+%a %b %e %Y %R:%S [%Nns]') [$(pwgen -snc -1 9)].log"
+filename2="/home/geo/Documents/txt/logs/logkeys/event7/$(xprop -d "$DISPLAY" -id $(xprop -d "$DISPLAY" -root -f _NET_ACTIVE_WINDOW 0x " \$0\\n" _NET_ACTIVE_WINDOW | awk "{print \$2}") | awk '/WM_CLASS/{print $4}' | sed 's/\"//g') $(date '+%a %b%e %Y %R:%S [%Nns]') [$(pwgen -snc -1 9)].log"
+filename3="/home/geo/Documents/txt/logs/logkeys/event6/$(xprop -d "$DISPLAY" -id $(xprop -d "$DISPLAY" -root -f _NET_ACTIVE_WINDOW 0x " \$0\\n" _NET_ACTIVE_WINDOW | awk "{print \$2}") | awk '/WM_CLASS/{print $4}' | sed 's/\"//g') $(date '+%a %b %e %Y %R:%S [%Nns]') [$(pwgen -snc -1 9)].log"
+filename4="/home/geo/Documents/txt/logs/logkeys/event5/$(xprop -d "$DISPLAY" -id $(xprop -d "$DISPLAY" -root -f _NET_ACTIVE_WINDOW 0x " \$0\\n" _NET_ACTIVE_WINDOW | awk "{print \$2}") | awk '/WM_CLASS/{print $4}' | sed 's/\"//g') $(date '+%a %b %e %Y %R:%S [%Nns]') [$(pwgen -snc -1 9)].log"
+filename5="/home/geo/Documents/txt/logs/logkeys/event10/$(xprop -d "$DISPLAY" -id $(xprop -d "$DISPLAY" -root -f _NET_ACTIVE_WINDOW 0x " \$0\\n" _NET_ACTIVE_WINDOW | awk "{print \$2}") | awk '/WM_CLASS/{print $4}' | sed 's/\"//g') $(date '+%a %b %e %Y %R:%S [%Nns]') [$(pwgen -snc -1 9)].log"
+filename6="/home/geo/Documents/txt/logs/logkeys/event12/$(xprop -d "$DISPLAY" -id $(xprop -d "$DISPLAY" -root -f _NET_ACTIVE_WINDOW 0x " \$0\\n" _NET_ACTIVE_WINDOW | awk "{print \$2}") | awk '/WM_CLASS/{print $4}' | sed 's/\"//g') $(date '+%a %b %e %Y %R:%S [%Nns]') [$(pwgen -snc -1 9)].log"
+filename7="/home/geo/Documents/txt/logs/logkeys/event28/$(xprop -d "$DISPLAY" -id $(xprop -d "$DISPLAY" -root -f _NET_ACTIVE_WINDOW 0x " \$0\\n" _NET_ACTIVE_WINDOW | awk "{print \$2}") | awk '/WM_CLASS/{print $4}' | sed 's/\"//g') $(date '+%a %b %e %Y %R:%S [%Nns]') [$(pwgen -snc -1 9)].log"
+filename8="/home/geo/Documents/txt/logs/logkeys/event31/$(xprop -d "$DISPLAY" -id $(xprop -d "$DISPLAY" -root -f _NET_ACTIVE_WINDOW 0x " \$0\\n" _NET_ACTIVE_WINDOW | awk "{print \$2}") | awk '/WM_CLASS/{print $4}' | sed 's/\"//g') $(date '+%a %b %e %Y %R:%S [%Nns]') [$(pwgen -snc -1 9)].log"
+
+pkill logkeys;
+rm /var/run/logkeys.pid;
+
+logkeys -s -u -d event4 -o "$filename1"; # log built-in keyboard
+rm /var/run/logkeys.pid;
+logkeys -s -u -d event7 -o "$filename2"; # log external keyboard
+rm /var/run/logkeys.pid;
+logkeys -s -u -d event6 -o "$filename3"; # log mouse keyboard buttons
+rm /var/run/logkeys.pid;
+logkeys -s -u -d event5 -o "$filename4"; # log mouse buttons 
+rm /var/run/logkeys.pid;
+logkeys -s -u -d event10 -o "$filename5"; # log pointer 
+rm /var/run/logkeys.pid;
+logkeys -s -u -d event12 -o "$filename6"; # log pointer volume keys 
+rm /var/run/logkeys.pid;
+logkeys -s -u -d event28 -o "$filename7"; # log USB Gamepad 
+rm /var/run/logkeys.pid;
+logkeys -s -u -d event31 -o "$filename8"; # log second external keyboard 

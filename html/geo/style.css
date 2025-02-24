@@ -1,0 +1,66 @@
+@import url('https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700&display=swap');
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+}
+
+html {
+	scroll-behavior: smooth;
+}
+
+body {
+    display: flex;
+    min-height: 100vh;
+    background: #222;
+}
+
+nav {
+    position: relative;
+    margin: 50px auto 0;
+    width: 100%;
+    max-width: 590px; /* Limit width to ensure responsiveness */
+    height: 50px;
+    background: #34495e;
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    box-shadow: 0 2px 3px 0 rgba(0, 0, 0, .1);
+}
+
+nav a {
+    font-size: 2.5vw; /* Responsive font size based on viewport width */
+    text-transform: uppercase;
+    color: white;
+    text-decoration: none;
+    line-height: 50px;
+    position: relative;
+    z-index: 1;
+    flex-grow: 1;
+    text-align: center;
+    display: inline-block;
+    transition: font-size 0.3s ease; /* Smooth text size transition */
+}
+
+nav .animation {
+    position: absolute;
+    height: 100%;
+    top: 0;
+    z-index: 0;
+    background: #1abc9c;
+    border-radius: 8px;
+    transition: width 0.5s ease, left 0.5s ease, font-size 0.3s ease; /* Smooth width and position transitions */
+}
+
+/* nav a.active {
+    color: #1abc9c;
+}
+*/
+
+/* Initial position for the animation */
+nav .start-home {
+    width: 20%; /* Start at 20% width */
+    left: 0; /* Initially on the first link */
+}

@@ -1,0 +1,37 @@
+#!/bin/bash
+
+# Directory to loop through
+day="$(date '+%a')"
+date="$(date '+%b %e %Y')"
+full_dir="/home/geo/Documents/txt/Clipboard/${day} ${date}/"
+
+# Create a temporary file for rofi input
+selected_file=$(mktemp) || exit
+trap 'rm -f "$selected_file"' EXIT
+
+# Loop through each file in the directory and concatenate content into a single block
+content_block=""
+
+for file in "$full_dir"*; do
+    # Check if the item is a file
+    if [ -f "$file" ]; then
+        # Read the contents of the file using cat
+        content=$(cat "$file")
+
+        # Append content to content block if it's not already included
+        if ! grep -q "\<$content\>" <<< "${content_block}"; then
+            content_block+="\n${content}"
+        fi
+    fi
+done
+
+# Pass the contents of the content block to rofi
+selected_content=$(echo -e "$content_block" | rofi -dmenu -p "Select content to copy to clipboard" -no-custom)
+
+# Copy selected content to clipboard buffer using xclip
+if [ -n "$selected_content" ]; then
+    echo -n "$selected_content" | xclip -selection c
+    echo "Selected content copied to clipboard."
+else
+    echo "No content selected. Nothing copied to clipboard."
+fi

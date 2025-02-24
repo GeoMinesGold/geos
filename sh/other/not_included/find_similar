@@ -1,0 +1,40 @@
+#!/bin/bash
+
+mapfile -t old_sh_files < <(find /home/geo/old_sh -type f)
+mapfile -t sh_files < <(find /home/geo/Documents/sh -type f)
+mapfile -t new_sh_files < <(find /home/geo/Documents/Scripts/sh -type f)
+
+match_function() {
+    matched_new_file=""
+    new_matched=false
+    for new_file in "${new_sh_files[@]}"; do
+        matched_old_file=""
+        old_matched=false
+        for old_file in "${old_sh_files[@]}"; do
+            if [[ "$(ssdeep -l -d "${old_file}" "${new_file}" 2>/dev/null | awk '{print $4}' | tr -d '()')" -ge 60 ]]; then
+                matched_old_file="${old_file}"
+                old_matched=true
+                break
+            fi
+        done
+        if [[ "$(ssdeep -l -d "${file}" "${new_file}" 2>/dev/null | awk '{print $4}' | tr -d '()')" -ge 60 ]]; then
+            matched_new_file="${new_file}"
+            new_matched=true
+            echo "Files ${file}, ${matched_old_file} and ${matched_new_file} match"
+            if [[ "${old_matched}" == "false" ]]; then
+                echo "${matched_new_file} has no match"
+            fi
+            break
+        fi
+    done
+
+    if [[ "${new_matched}" == "false" ]]; then
+        echo "${file} has no match"
+    fi
+}
+
+for file in "${sh_files[@]}"; do
+    match_function &
+done
+
+wait

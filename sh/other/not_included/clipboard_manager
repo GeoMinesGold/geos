@@ -1,0 +1,22 @@
+#!/bin/bash
+
+readonly sh_dir="/home/geo/Documents/sh/"
+dir="/home/geo/Documents/txt/Clipboard/"
+readonly initial_dir="${dir}"
+ext=".txt"
+readonly manager_state="clipboard"
+
+source "${sh_dir}common/header"
+
+last_saved=""
+while true; do
+    clipboard=$(xclip -o -sel clipboard 2>/dev/null)
+    if [[ -n "${clipboard}" ]]; then
+        if [[ "${last_saved}" != "${clipboard}" ]]; then
+        get_all
+        echo "${clipboard}" > "${file}"
+        last_saved="${clipboard}"
+        fi
+    fi
+    sleep '0.5'
+done

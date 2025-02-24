@@ -1,0 +1,44 @@
+#!/usr/bin/env python
+
+from mpmath import zeta, mp
+import sys
+
+def evaluate_zeta(real_part, imag_start, imag_end, step=0.1):
+    """Evaluate the Riemann zeta function along a given real part."""
+    mp.dps = 50  # Set decimal places for precision
+    results = []
+    
+    # Iterate through imaginary parts
+    imag = imag_start
+    while imag <= imag_end:
+        s = real_part + 1j * imag  # Create a complex number
+        value = zeta(s)  # Calculate the zeta function at this point
+        results.append((s, value))
+        
+        # Check if the value is close to zero
+        if abs(value) < 1e-10:
+            print(f"Non-trivial zero found at s = {s}, ζ(s) = {value}")
+
+        imag += step
+
+    return results
+
+def main():
+    if len(sys.argv) != 4:
+        print("Usage: python zeta_evaluator.py <real_part> <imag_start> <imag_end>")
+        print("Example: python zeta_evaluator.py 0.5 0 30")
+        sys.exit(1)
+
+    try:
+        real_part = float(sys.argv[1])
+        imag_start = float(sys.argv[2])
+        imag_end = float(sys.argv[3])
+    except ValueError:
+        print("Please provide valid numerical inputs.")
+        sys.exit(1)
+
+    print(f"Evaluating ζ(s) for Re(s) = {real_part} from Im(s) = {imag_start} to Im(s) = {imag_end}")
+    evaluate_zeta(real_part, imag_start, imag_end)
+
+if __name__ == "__main__":
+    main()

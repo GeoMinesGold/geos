@@ -1,0 +1,57 @@
+#!/bin/bash
+sleep 2
+# Get screen dimensions
+screen_width=$(xdpyinfo | awk '/dimensions:/ {print $2}' | cut -d 'x' -f1)
+screen_height=$(xdpyinfo | awk '/dimensions:/ {print $2}' | cut -d 'x' -f2)
+
+# Center of the screen
+# center_x=$((screen_width / 2))
+# center_y=$((screen_height / 2))
+
+mouse_info=$(xdotool getmouselocation --shell)
+eval $mouse_info
+center_x=$X
+center_y=$Y
+
+#center_x=960
+#center_y=573
+
+echo $center_x
+echo $center_y
+
+# Radius of the circle
+radius=200
+speed=0.0001
+
+while true; do
+    # Press and hold down the left mouse button
+    xdotool mousedown 1
+
+    for angle in $(seq 0 0.1 6.28); do
+        delta_x=$(echo "$radius * c($angle)" | bc -l | awk '{printf "%.0f", $1}')
+        delta_y=$(echo "$radius * s($angle)" | bc -l | awk '{printf "%.0f", $1}')
+
+        new_x=$((center_x + delta_x))
+        new_y=$((center_y + delta_y))
+
+        # Ensure the mouse cursor stays within screen bounds
+        if [ $new_x -lt 0 ]; then
+            new_x=0
+        elif [ $new_x -gt $screen_width ]; then
+            new_x=$screen_width
+        fi
+
+        if [ $new_y -lt 0 ]; then
+            new_y=0
+        elif [ $new_y -gt $screen_height ]; then
+            new_y=$screen_height
+        fi
+
+        xdotool mousemove --sync $new_x $new_y
+        sleep $speed
+    done
+
+    # Release the left mouse button
+    xdotool mouseup 1
+	sleep 0.3
+done

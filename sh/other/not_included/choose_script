@@ -1,0 +1,6 @@
+#!/bin/bash
+
+# for info about conditions
+rofi_input=$(ls /home/geo/Documents/sh/ | rofi -p prompt -dmenu -mesg 'Choose script to execute:')
+[[ -z ${rofi_input} ]] && exit
+/home/geo/Documents/sh/${rofi_input}

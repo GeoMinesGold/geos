@@ -1,0 +1,80 @@
+#!/bin/bash
+
+# Declare input associative array and output directory
+declare -A input_dir
+output_dir="${HOME}/test"
+
+# Function to prompt for directories and store them in an associative array
+add_directories() {
+    local -n dir_array=$1 # Pass by reference
+    local dir_type=$2
+    echo "Enter ${dir_type} directories (type 'exit' to stop):"
+    while true; do
+        read -r dir
+        if [[ "$dir" == "exit" ]]; then
+            break
+        else
+            dir_array["$dir"]=""
+        fi
+    done
+}
+
+# Add input directories
+add_directories input_dir "input"
+
+# Function to check if a directory exists and is not empty
+check_dir() {
+    local dir=$1
+    local result=false
+
+    if [[ ! -d "$dir" ]]; then
+        result=false
+    elif [[ -z "$(find "$dir" -mindepth 1 -print -quit)" ]]; then
+        result=false
+    else
+        result=true
+    fi
+
+    echo "$result"
+}
+
+# Check input directories
+for dir in "${!input_dir[@]}"; do
+    dir_status=$(check_dir "$dir")
+    input_dir["$dir"]=$dir_status
+done
+
+# Function to find counterparts of files
+find_counterparts() {
+    local file=$1
+    local base_name=$(basename "$file")
+    local counterparts=()
+
+    for output_file in $(find "$output_dir" -type f -name "$base_name"); do
+        if diff -q "$file" "$output_file" > /dev/null; then
+            echo "Found exact match for '$file' in '$output_file'"
+            return
+        else
+            counterparts+=("$output_file")
+        fi
+    done
+
+    if [ ${#counterparts[@]} -gt 0 ]; then
+        echo "Differences found for '$file':"
+        for counterpart in "${counterparts[@]}"; do
+            echo "Diff with '$counterpart':"
+            diff "$file" "$counterpart"
+        done
+    else
+        echo "No counterpart found for '$file'"
+    fi
+}
+
+# Process each file in input directories
+for dir in "${!input_dir[@]}"; do
+    if [[ "${input_dir[$dir]}" == "true" ]]; then
+        while IFS= read -r -d '' file; do
+            find_counterparts "$file"
+        done < <(find "$dir" -type f -print0)
+    fi
+done

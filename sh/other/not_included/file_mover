@@ -1,0 +1,24 @@
+#!/bin/bash
+
+# Source and destination directories
+source_dir="/media/ntfs/where/"
+dest_dir="/media/ntfs/pink/"
+
+# Create the destination directory if it doesn't exist
+mkdir -p "$dest_dir"
+
+# Loop through each file in the source directory
+for file_path in $source_dir*; do
+    if [ -f "$file_path" ]; then
+        # Get the file extension
+        extension="${file_path##*.}"
+        
+        # Create a directory with the file extension in the destination directory
+        mkdir -p "${dest_dir}${extension}/"
+
+        # Move the file to the directory with the corresponding extension
+        mv -n "$file_path" "${dest_dir}${extension}/"
+    fi
+done
+
+echo "Files have been moved to subdirectories based on their extensions."
